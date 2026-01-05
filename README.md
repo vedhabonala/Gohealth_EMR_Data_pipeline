@@ -37,26 +37,25 @@ This approach mirrors production data pipelines while remaining infrastructure-i
 
 ## Repository Structure
 
-├── data/
-│   └── Data_Eng_Data_Set.xlsx        # Raw EMR source extracts
-│
-├── src/
-│   └── Pipeline.py                  # End-to-end pipeline implementation
-│
-├── models/
-│   └── data_model.txt               # Star schema diagram and textual schema layout
-│
-├── outputs/
-│   ├── gohealth_emr_output.xlsx     # Curated analytics output (PHI masked)
-│   ├── gohealth_emr_output.enc      # Encrypted analytics output
-│   ├── gohealth_emr_quarantine.xlsx # Quarantined invalid records
-│   └── gohealth_emr_audit.log       # Audit and validation logs
-│
-├── requirements.txt                 # Python dependencies
-├── README.md                        # Project overview and execution steps
-├── ASSESSMENT_EXPLANATION.md        # Complete assessment explanation and design reasoning
-└── .gitignore                       # Git exclusions for local artifacts
-
+    ├── data/
+    │   └── Data_Eng_Data_Set.xlsx        # Raw EMR source extracts
+    │
+    ├── src/
+    │   └── Pipeline.py                  # End-to-end pipeline implementation
+    │
+    ├── models/
+    │   └── data_model.txt               # Star schema diagram and textual schema layout
+    │
+    ├── outputs/
+    │   ├── gohealth_emr_output.xlsx     # Curated analytics output (PHI masked)
+    │   ├── gohealth_emr_output.enc      # Encrypted analytics output
+    │   ├── gohealth_emr_quarantine.xlsx # Quarantined invalid records
+    │   └── gohealth_emr_audit.log       # Audit and validation logs
+    │
+    ├── requirements.txt                 # Python dependencies
+    ├── README.md                        # Project overview and execution steps
+    ├── ASSESSMENT_EXPLANATION.md        # Complete assessment explanation and design reasoning
+    └── .gitignore                       # Git exclusions for local artifacts
 
 
 
