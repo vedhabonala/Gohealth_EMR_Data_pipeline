@@ -1,0 +1,119 @@
+SCHEMA DIAGRAM:
+
+I designed the data model using a star schema dimensional modeling approach:
+
+                         dim_patient
+              ┌────────────────────────────┐
+              │ patient_id_hash (PK)        │
+              │ first_name (masked)         │
+              │ last_name (masked)          │
+              │ date_of_birth               │
+              │ gender                      │
+              │ effective_from              │
+              │ effective_to                │
+              │ is_current                  │
+              └───────────────▲────────────┘
+                              │
+                              │
+                        fact_visit
+              ┌────────────────────────────┐
+              │ visit_id (PK)               │
+              │ patient_id_hash (FK)        │──────────▶ dim_patient
+              │ provider_id (FK)            │──────────▶ dim_provider
+              │ icd_code (FK)               │──────────▶ dim_icd
+              │ visit_date                  │
+              │ icd_valid_flag              │
+              │ … additional visit fields   │
+              └───────────────▲────────────┘
+                              │
+                              │
+                         fact_lab
+              ┌────────────────────────────┐
+              │ visit_id (FK)               │──────────▶ fact_visit
+              │ test_name                   │
+              │ test_value                  │
+              │ patient_id_hash (FK)        │──────────▶ dim_patient
+              └────────────────────────────┘
+
+
+          dim_provider                         dim_icd
+     ┌───────────────────┐            ┌────────────────────────┐
+     │ provider_id (PK)  │            │ icd_code (PK)           │
+     └───────────────────┘            │ icd_description         │
+                                      └────────────────────────┘
+
+
+
+
+Star Schema in Textual Layout:
+Dimension Tables (dim_*)
+
+1.dim_patient
+| Column | Type | Notes |
+|--------|------|------|
+| patient_id_hash | string | SHA-256 hashed patient ID (PHI masked) |
+| first_name | string | Masked first name |
+| last_name | string | Masked last name |
+| date_of_birth | date | DOB |
+| gender | string | Patient gender |
+| effective_from | date | SCD type 2 start date |
+| effective_to | date | SCD type 2 end date |
+| is_current | bool | Current active record |
+
+Note: This dimension is SCD Type 2–ready. While the assessment runs as a single execution, the structure demonstrates how patient attribute history could be tracked over time.
+
+2.dim_provider
+| Column | Type | Notes |
+|--------|------|------|
+| provider_id | int/string | Unique provider identifier |
+
+3.dim_icd
+| Column | Type | Notes |
+|--------|------|------|
+| icd_code | string | ICD-10 or reference code |
+| icd_description | string | Description of ICD code |
+
+Fact Tables (fact_*)
+
+1.fact_visit
+| Column | Type | Notes |
+|--------|------|------|
+| visit_id | int/string | Primary key for the visit |
+| patient_id_hash | string | FK → dim_patient.patient_id_hash |
+| provider_id | int/string | FK → dim_provider.provider_id |
+| visit_date | datetime | Date of visit |
+| location | string | Visit location |
+| reason_for_visit | string | Reason or complaint |
+| icd_code | string | FK → dim_icd.icd_code |
+| visit_status | string | Completed, Cancelled, etc. |
+| billable_amount | float | Charges for visit |
+| currency | string | Currency type |
+| follow_up_date | datetime | Follow-up date |
+| icd_valid_flag | bool | ICD code validation flag |
+
+
+2.fact_lab
+| Column | Type | Notes |
+|--------|------|------|
+| visit_id | int/string | FK → fact_visit.visit_id |
+| test_name | string | Lab test name |
+| test_value | string/float | Lab test result |
+| patient_id_hash | string | FK → dim_patient.patient_id_hash (from visits) |
+
+Note: No surrogate key is introduced for lab records in this assessment.
+Each lab record is associated to a visit, reflecting the one-to-many relationship between visits and laboratory tests.
+
+
+Relationship and Grain Explanation:
+
+fact_visit is the central fact table and represents the analytical grain of the model (one record per patient encounter).
+
+dim_patient, dim_provider, and dim_icd describe attributes of the clinical encounter and are linked at the visit level.
+
+fact_lab captures laboratory results at the visit level and links back to fact_visit.
+
+Provider and diagnosis dimensions are intentionally not linked directly to fact_lab, since providers and diagnoses describe the encounter rather than individual lab tests.
+
+
+
+

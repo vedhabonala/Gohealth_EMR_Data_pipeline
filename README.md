@@ -1,44 +1,122 @@
 # GoHealth EMR Data Engineering Pipeline
 
-**End-to-end HIPAA-compliant data pipeline** for EMR data, including CSV-in-Excel handling, validation, quarantine management, PHI masking, and encrypted output generation.
+## Overview
+This repository contains a local, end-to-end data engineering pipeline built to ingest, validate, transform, and prepare EMR data for analytics use cases such as:
 
----
+Patient outcomes
 
-## Features
+Provider performance
 
-- **CSV-in-Excel Worksheet Handling**  
-  Supports worksheets that contain CSV-formatted text inside a single column.
+Operational reporting
 
-- **Data Validations**  
-  - Null checks (required fields)  
-  - Duplicate detection  
-  - Logical validations (e.g., visit date after patient DOB)  
-  - ICD code validation (warn-level checks)
+The pipeline is designed for local execution to emphasize data engineering logic, validation strategies, and governance patterns independent of infrastructure.
+It demonstrates real-world healthcare data engineering practices including data quality enforcement, quarantine handling, PHI masking, audit logging, and dimensional modeling.
 
-- **Quarantine Management**  
-  Invalid or suspicious records are quarantined with severity levels (`ERROR` / `WARN`) for review.
+This solution processes EMR extracts for: Patients, Visits, Lab results, ICD diagnosis reference data
 
-- **HIPAA PHI Masking**  
-  - Masks patient first and last names  
-  - Hashes patient IDs using SHA-256  
-  - Ensures anonymized analytics
+## High-Level Pipeline Flow
 
-- **Audit Logging**  
-  Records every ingestion, validation, and export step for traceability.
+The pipeline follows a linear, stage-based ETL pattern:
 
-- **Output**  
-  - Dimension tables: `dim_patient`, `dim_provider`, `dim_icd`  
-  - Fact tables: `fact_visit`, `fact_lab`  
-  - Metrics: `provider_metrics`, `diagnosis_metrics`  
-  - All outputs are written to Excel and encrypted (`.enc`)  
+Ingest structured EMR extracts into in-memory dataframes
 
----
+Clean and standardize core fields
 
-## Requirements
+Apply data quality validations with severity levels (WARN / ERROR)
 
-- Python 3.9+  
-- Libraries:  
-  ```txt
-  pandas>=1.5.0
-  cryptography>=41.0.0
-  openpyxl>=3.1.2
+Quarantine invalid records without silently dropping data
+
+Apply PHI masking and identifier hashing
+
+Build analytics-ready fact and dimension datasets
+
+Generate audit logs and encrypted outputs
+
+This approach mirrors production data pipelines while remaining infrastructure-independent for assessment execution.
+
+
+## Repository Structure
+
+data/
+  └── Data_Eng_Data_Set.xlsx        # Raw EMR source extracts
+
+src/
+  └── Pipeline.py                  # End-to-end pipeline implementation
+
+outputs/
+  ├── gohealth_emr_output.xlsx     # Curated analytics output (masked)
+  ├── gohealth_emr_output.enc      # Encrypted output file
+  ├── gohealth_emr_quarantine.xlsx # Quarantined invalid records
+  └── gohealth_emr_audit.log       # Audit and validation logs
+
+requirements.txt                   # Python dependencies
+.gitignore                         # Git exclusions for local artifacts
+README.md                          # Project overview and execution
+ASSESSMENT.md                     # Detailed design & reasoning
+
+
+## How to Run the Pipeline
+
+1. Install dependencies
+
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+
+2. Execute the pipeline
+
+python src/Pipeline.py
+
+The pipeline runs locally and does not require any external configuration, credentials, or cloud services.
+
+## Outputs
+
+After execution, the pipeline generates:
+
+1. Curated analytics output
+outputs/gohealth_emr_output.xlsx 
+
+Dimension tables (dim_patient, dim_provider, dim_icd)
+
+Fact tables (fact_visit, fact_lab)
+
+Basic analytics aggregates
+
+2. Encrypted output file
+outputs/gohealth_emr_output.enc
+
+Demonstrates secure storage of analytics data
+
+3. Quarantine file
+outputs/gohealth_emr_quarantine.xlsx
+
+Contains invalid or suspicious records with rule and severity
+
+4. Audit log
+outputs/gohealth_emr_audit.log
+
+Records ingestion, validation, and export events
+
+All analytics outputs apply PHI masking and identifier hashing prior to export.
+
+
+## External Libraries Used
+
+pandas – Used for data ingestion, cleaning, validation, transformation, and dimensional modeling. The transformation and validation logic mirrors patterns commonly used in distributed processing and warehouse-based systems.
+
+openpyxl – Used for reading from and writing to Excel files to generate reviewer-friendly output artifacts.
+
+hashlib (SHA-256) – Used to hash patient identifiers, enabling consistent record linkage while protecting PHI.
+
+cryptography – Used to encrypt final analytics outputs to demonstrate protection of sensitive data at rest.
+
+I limited the technology stack to avoid external configuration, credentials, or subscription requirements that could complicate execution or review. This allowed the assessment to be reproducible and straightforward to execute in a self-contained environment, while keeping the focus on data engineering logic, validation strategy, and governance patterns.
+
+
+
+
+
+
+
+
+
+
